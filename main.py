@@ -3,13 +3,16 @@ from __future__ import annotations
 
 import argparse
 
+from q1 import Q1
 from q3 import Q3
 from q6 import Q6
 from q9 import Q9
 from q12 import Q12
+from q17 import Q17
+from q19 import Q19
 
 # Instantiate each solver; key the registry by its GAIA question number.
-SOLVERS = {s.number: s for s in [Q3(), Q6(), Q9(), Q12()]}
+SOLVERS = {s.number: s for s in [Q1(), Q3(), Q6(), Q9(), Q12(), Q17(), Q19()]}
 
 
 def main() -> None:

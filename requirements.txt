@@ -4,6 +4,8 @@ llama-index-llms-google-genai>=0.10.0
 
 # Tools
 llama-index-tools-code-interpreter>=0.4.0
+ddgs>=9.0            # web_search (multi-backend fallback)
+beautifulsoup4>=4.12 # read_url (HTML -> text)
 
 # Data / API / config
 pydantic>=2.0
