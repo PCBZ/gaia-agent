@@ -1,0 +1,12 @@
+# LlamaIndex core + Gemini LLM
+llama-index-core>=0.14.0
+llama-index-llms-google-genai>=0.10.0
+
+# Tools
+llama-index-tools-code-interpreter>=0.4.0
+
+# Data / API / config
+pydantic>=2.0
+requests>=2.31
+python-dotenv>=1.0
+huggingface_hub>=0.24

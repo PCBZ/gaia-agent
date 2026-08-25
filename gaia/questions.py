@@ -8,6 +8,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import requests
@@ -16,6 +17,11 @@ from pydantic import BaseModel, ConfigDict, Field
 SCORING_API = "https://agents-course-unit4-scoring.hf.space"
 # questions.json lives at the repo root (one level above this package).
 CACHE_FILE = Path(__file__).parent.parent / "questions.json"
+
+# The course /files endpoint no longer serves attachments, so we pull them from
+# the (gated) GAIA dataset instead. Requires HF_TOKEN + accepted dataset terms.
+GAIA_REPO = "gaia-benchmark/GAIA"
+WORKSPACE = Path(__file__).parent.parent / "workspace"
 
 
 class Question(BaseModel):
@@ -59,3 +65,24 @@ def load_questions(cache: Path = CACHE_FILE, refresh: bool = False) -> list[Ques
     questions = fetch_questions()
     save_questions(questions, cache)
     return questions
+
+
+def download_attachment(question: "Question", split: str = "validation") -> Path:
+    """Download a question's attachment from the gated GAIA dataset.
+
+    Returns the local file path (cached across runs). Needs HF_TOKEN in the env
+    and access granted at https://huggingface.co/datasets/gaia-benchmark/GAIA.
+    """
+    from huggingface_hub import hf_hub_download
+
+    if not question.has_file:
+        raise ValueError(f"Question {question.task_id} has no attachment.")
+
+    path = hf_hub_download(
+        repo_id=GAIA_REPO,
+        repo_type="dataset",
+        filename=f"2023/{split}/{question.file_name}",
+        token=os.environ["HF_TOKEN"],
+        local_dir=str(WORKSPACE),
+    )
+    return Path(path)
