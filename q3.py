@@ -4,7 +4,6 @@ from __future__ import annotations
 from llama_index.core.llms import LLM
 
 from gaia.base import QuestionSolver
-from gaia.questions import load_questions
 
 SYSTEM = (
     "You are a general AI assistant. Solve the task, then finish with a line:\n"
@@ -15,10 +14,9 @@ SYSTEM = (
 
 class Q3(QuestionSolver):
     number = 3
-    index = 2
 
     async def solve(self, llm: LLM) -> str:
-        question = load_questions()[self.index]
+        question = self.get_question()
         resp = await llm.acomplete(SYSTEM + "\n\n" + question.question)
         return str(resp)
 

@@ -36,7 +36,17 @@ class QuestionSolver(ABC):
     """Solves one GAIA question."""
 
     number: int  # GAIA question number (1-based), used by the registry
-    index: int   # 0-based index into load_questions()
+
+    @property
+    def index(self) -> int:
+        """0-based index into load_questions(); derived from `number`."""
+        return self.number - 1
+
+    def get_question(self):
+        """Return the Question object for this solver."""
+        from gaia.questions import load_questions
+
+        return load_questions()[self.index]
 
     def resolve(self, llm: Optional[LLM] = None) -> str:
         """Public entry point. Injects GoogleGenAI unless another LLM is given."""

@@ -13,7 +13,7 @@ from llama_index.core.llms import LLM
 from llama_index.tools.code_interpreter import CodeInterpreterToolSpec
 
 from gaia.base import QuestionSolver
-from gaia.questions import download_attachment, load_questions
+from gaia.questions import download_attachment
 
 SYSTEM = (
     "You are a general AI assistant. Use the code_interpreter tool to run the "
@@ -23,10 +23,9 @@ SYSTEM = (
 
 class Q12(QuestionSolver):
     number = 12
-    index = 11
 
     async def solve(self, llm: LLM) -> str:
-        question = load_questions()[self.index]
+        question = self.get_question()
         code = download_attachment(question).read_text(encoding="utf-8")
 
         agent = FunctionAgent(tools=CodeInterpreterToolSpec().to_tool_list(), 

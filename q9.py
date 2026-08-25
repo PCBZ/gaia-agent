@@ -1,7 +1,5 @@
-"""GAIA question #6: find the subset of S in any counter-example that proves the
-operation * is not commutative. Pure reasoning, no tools.
-
-Expected answer: b, e  (only b*e != e*b in the given table).
+"""GAIA question #9: from a grocery list, output only the items that are
+botanically vegetables, alphabetized. Pure reasoning, no tools.
 """
 from __future__ import annotations
 
@@ -15,15 +13,14 @@ SYSTEM = (
 )
 
 
-class Q6(QuestionSolver):
-    number = 6
+class Q9(QuestionSolver):
+    number = 9
 
     async def solve(self, llm: LLM) -> str:
         question = self.get_question()
-        print(f"Question {self.number}: {question.question}")
         resp = await llm.acomplete(SYSTEM + "\n\n" + question.question)
         return str(resp)
 
 
 if __name__ == "__main__":
-    print(Q6().resolve())
+    print(Q9().resolve())
