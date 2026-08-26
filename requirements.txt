@@ -1,6 +1,7 @@
 # LlamaIndex core + Gemini LLM
 llama-index-core>=0.14.0
 llama-index-llms-google-genai>=0.10.0
+llama-index-llms-openai-like>=0.3.0   # HF Inference Providers (huggingface_llm)
 
 # Tools
 llama-index-tools-code-interpreter>=0.4.0

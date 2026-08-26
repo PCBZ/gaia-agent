@@ -21,7 +21,7 @@ def web_search(query: str, max_results: int = 5) -> str:
     )
 
 
-def read_url(url: str, max_chars: int = 8000) -> str:
+def read_url(url: str, max_chars: int = 20000) -> str:
     """Fetch a web page and return its visible text (truncated)."""
     resp = requests.get(
         url, timeout=30, headers={"User-Agent": "Mozilla/5.0 (gaia-agent)"}

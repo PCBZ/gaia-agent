@@ -8,14 +8,15 @@ from __future__ import annotations
 from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.core.llms import LLM
 
-from gaia.base import QuestionSolver
+from gaia.base import QuestionSolver, huggingface_llm
 from gaia.web import web_tools
 
 SYSTEM = (
-    "Use the web_search and read_url tools. Several countries may be tied for the "
-    "fewest athletes; enumerate all of them, then pick the first alphabetically. "
-    "Answer with the IOC country code only. Finish with a line:\n"
-    "FINAL ANSWER: <code>"
+    "Use the web_search and read_url tools to look up how many athletes each "
+    "country sent. Do not assume a country is small — verify its athlete count "
+    "before concluding. Find the smallest count, list every country tied at that "
+    "count, then choose the one that comes first alphabetically. Answer with that "
+    "country's IOC code only. Finish with a line:\nFINAL ANSWER: <code>"
 )
 
 
@@ -30,4 +31,4 @@ class Q17(QuestionSolver):
 
 
 if __name__ == "__main__":
-    print(Q17().resolve())
+    print(Q17().resolve(llm=huggingface_llm()))

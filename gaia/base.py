@@ -32,6 +32,25 @@ def default_llm() -> LLM:
     )
 
 
+def huggingface_llm(model: str = "Qwen/Qwen2.5-72B-Instruct") -> LLM:
+    """An HF Inference Providers LLM (OpenAI-compatible router), using HF_TOKEN.
+
+    A separate free-tier quota from Gemini. Inject it explicitly, e.g.
+    `Q17().resolve(llm=huggingface_llm())`. Pick a model that supports tool
+    calling, since FunctionAgent needs it.
+    """
+    from llama_index.llms.openai_like import OpenAILike
+
+    return OpenAILike(
+        model=model,
+        api_base="https://router.huggingface.co/v1",
+        api_key=os.environ["HF_TOKEN"],
+        is_chat_model=True,
+        is_function_calling_model=True,
+        temperature=0,
+    )
+
+
 class QuestionSolver(ABC):
     """Solves one GAIA question."""
 
