@@ -5,8 +5,11 @@ llama-index-llms-openai-like>=0.3.0   # HF Inference Providers (huggingface_llm)
 
 # Tools
 llama-index-tools-code-interpreter>=0.4.0
-ddgs>=9.0            # web_search (multi-backend fallback)
-beautifulsoup4>=4.12 # read_url (HTML -> text)
+ddgs>=9.0            # web_search (multi-backend fallback, keyless)
+pandas>=2.0          # read_tables (pd.read_html) + xlsx questions
+lxml>=5.0            # pd.read_html backend
+beautifulsoup4>=4.12 # pd.read_html fallback backend
+# read_url uses Jina Reader (https://r.jina.ai) over plain requests — no package.
 
 # Data / API / config
 pydantic>=2.0

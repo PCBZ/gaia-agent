@@ -1,16 +1,19 @@
-"""Shared web tools for retrieval questions: search + fetch-page-as-text.
+"""Shared web tools for retrieval questions — fully keyless.
 
-Wrapped as LlamaIndex FunctionTools via `web_tools()`.
+- web_search: DuckDuckGo via ddgs (multi-backend fallback), no API key.
+- read_url:   Jina Reader (https://r.jina.ai), returns clean Markdown with tables
+              preserved, no API key.
+- read_tables: pandas.read_html for precise stats tables.
 """
 from __future__ import annotations
 
 import requests
-from bs4 import BeautifulSoup
 from ddgs import DDGS
 from llama_index.core.tools import FunctionTool
+from llama_index.tools.code_interpreter import CodeInterpreterToolSpec
 
 
-def web_search(query: str, max_results: int = 5) -> str:
+def web_search(query: str, max_results: int = 6) -> str:
     """Search the web. Returns lines of 'title | url | snippet'."""
     results = list(DDGS().text(query, max_results=max_results, backend="auto"))
     if not results:
@@ -22,23 +25,39 @@ def web_search(query: str, max_results: int = 5) -> str:
 
 
 def read_url(url: str, max_chars: int = 20000) -> str:
-    """Fetch a web page and return its visible text (truncated)."""
+    """Fetch a page as clean Markdown (tables preserved) via Jina Reader."""
     resp = requests.get(
-        url, timeout=30, headers={"User-Agent": "Mozilla/5.0 (gaia-agent)"}
+        f"https://r.jina.ai/{url}", timeout=90, headers={"User-Agent": "gaia-agent"}
     )
     resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-    for tag in soup(["script", "style", "sup"]):
-        tag.decompose()
-    text = "\n".join(
-        line.strip() for line in soup.get_text("\n").splitlines() if line.strip()
-    )
-    return text[:max_chars]
+    return resp.text[:max_chars]
+
+
+def read_tables(url: str, max_chars: int = 20000) -> str:
+    """Fetch a URL and return its HTML tables as text with rows preserved.
+
+    Use this for statistics, rankings or any data where columns must line up with
+    the right row.
+    """
+    import pandas as pd
+
+    try:
+        tables = pd.read_html(url)
+    except Exception as exc:  # noqa: BLE001 - no tables / fetch failure
+        return f"No tables parsed from {url}: {exc}"
+    parts = [
+        f"### Table {i} (shape {df.shape})\n{df.to_string()}"
+        for i, df in enumerate(tables)
+    ]
+    return "\n\n".join(parts)[:max_chars]
 
 
 def web_tools() -> list[FunctionTool]:
-    """The search + read toolset for retrieval questions."""
+    """Keyless search + read tools, plus code_interpreter so the agent can compute
+    maxima/minima and aggregates over fetched data instead of eyeballing them."""
     return [
         FunctionTool.from_defaults(fn=web_search),
         FunctionTool.from_defaults(fn=read_url),
+        FunctionTool.from_defaults(fn=read_tables),
+        *CodeInterpreterToolSpec().to_tool_list(),
     ]

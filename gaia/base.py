@@ -22,6 +22,27 @@ from llama_index.llms.google_genai import GoogleGenAI
 
 DEFAULT_MODEL = "gemini-3.6-flash"
 
+# Generic, question-agnostic policy prompt shared by every solver. It encodes
+# problem-solving discipline (not facts about any specific question) plus GAIA's
+# exact-match answer format.
+SYSTEM_PROMPT = (
+    "You are a general AI assistant. Use the available tools to gather evidence; "
+    "do not rely on memory or assumptions for facts.\n"
+    "- Verify before concluding. When the question asks for the most / least / "
+    "largest / smallest / first / only / best, collect the complete set of "
+    "candidates and confirm none beats your pick — never answer from the first "
+    "plausible candidate you find.\n"
+    "- A page's key tables or lists may appear far down; read enough to be sure.\n"
+    "- To find a maximum/minimum/ranking over many rows, load the data and compute "
+    "it with the code_interpreter tool rather than comparing by eye.\n"
+    "- Recompute rather than estimate when numbers are involved.\n"
+    "Finish with a single line:\n"
+    "FINAL ANSWER: <answer>\n"
+    "After the colon put only the answer, formatted exactly as asked: a number "
+    "with no commas or units unless requested; otherwise as few words as possible, "
+    "or a comma-separated list. No extra words or trailing punctuation."
+)
+
 
 def default_llm() -> LLM:
     """The LLM used when a solver's resolve() is called without one."""

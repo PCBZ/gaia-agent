@@ -1,7 +1,5 @@
-"""GAIA question #17: which country had the fewest athletes at the 1928 Summer
-Olympics? Tie -> first alphabetically. Answer = IOC country code. Web retrieval.
-
-Several nations sent a single athlete, so the alphabetical tie-break matters.
+"""GAIA question #13: how many at bats did the Yankee with the most walks in the
+1977 regular season have that same season? Web retrieval.
 """
 from __future__ import annotations
 
@@ -13,9 +11,8 @@ from gaia.web import web_tools
 
 SYSTEM = SYSTEM_PROMPT
 
-
-class Q17(QuestionSolver):
-    number = 17
+class Q13(QuestionSolver):
+    number = 13
 
     async def solve(self, llm: LLM) -> str:
         question = self.get_question()
@@ -23,6 +20,7 @@ class Q17(QuestionSolver):
         resp = await agent.run(user_msg=question.question)  # pyright: ignore[reportDeprecated]
         return str(resp)
 
-
 if __name__ == "__main__":
-    print(Q17().resolve(llm=huggingface_llm()))
+    print(Q13().resolve(llm=huggingface_llm()))
+
+
