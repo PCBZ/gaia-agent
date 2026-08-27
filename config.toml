@@ -5,6 +5,7 @@
 scoring_api  = "https://agents-course-unit4-scoring.hf.space"  # GAIA course questions/submit
 gaia_dataset = "gaia-benchmark/GAIA"                           # gated HF dataset for attachments
 jina_reader  = "https://r.jina.ai"                             # read_url: URL -> clean markdown
+jina_search  = "https://s.jina.ai"                             # jina_search: web search (needs JINA_API_KEY)
 
 [llm]
 # The provider used by default_llm() (Gemini via AI Studio).

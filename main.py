@@ -22,7 +22,7 @@ from q20 import Q20
 from gaia.web_solver import WebSolver
 
 # Instantiate each solver; key the registry by its GAIA question number.
-SOLVERS = {s.number: s for s in [Q1(), Q3(), Q5(), Q6(), Q7(), Q9(), Q10(), Q11(), Q12(), Q13(), Q14(), Q15(), Q17(), Q19(), Q20(), WebSolver(18)]}
+SOLVERS = {s.number: s for s in [Q1(), Q3(), Q5(), Q6(), Q7(), Q9(), Q10(), Q11(), Q12(), Q13(), Q14(), Q15(), Q17(), Q19(), Q20(), WebSolver(8), WebSolver(18)]}
 
 
 def main() -> None:

@@ -7,6 +7,8 @@
 """
 from __future__ import annotations
 
+import os
+
 import httpx
 from ddgs import DDGS
 from llama_index.core.tools import FunctionTool
@@ -27,6 +29,24 @@ def web_search(query: str, max_results: int = 10) -> str:
         f"{r.get('title', '')} | {r.get('href', '')} | {r.get('body', '')}"
         for r in results
     )
+
+
+def jina_search(query: str, max_chars: int = 8000) -> str:
+    """Stronger web search via Jina (s.jina.ai): returns result URLs with extracted
+    content. Better than web_search at surfacing specific/obscure pages. Needs
+    JINA_API_KEY.
+    """
+    key = os.environ.get("JINA_API_KEY")
+    if not key:
+        return "JINA_API_KEY not set."
+    resp = httpx.get(
+        f"{CONFIG['api']['jina_search']}/{query}",
+        headers={"Authorization": f"Bearer {key}", "Accept": "text/plain"},
+        timeout=90,
+        follow_redirects=True,
+    )
+    resp.raise_for_status()
+    return resp.text[:max_chars]
 
 
 def read_url(url: str, max_chars: int = 20000) -> str:
@@ -65,6 +85,7 @@ def web_tools() -> list[FunctionTool]:
     maxima/minima and aggregates over fetched data instead of eyeballing them."""
     return [
         FunctionTool.from_defaults(fn=web_search),
+        FunctionTool.from_defaults(fn=jina_search),
         FunctionTool.from_defaults(fn=read_url),
         FunctionTool.from_defaults(fn=read_tables),
         *CodeInterpreterToolSpec().to_tool_list(),
