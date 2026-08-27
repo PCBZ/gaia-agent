@@ -24,7 +24,7 @@ def web_search(query: str, max_results: int = 6) -> str:
     )
 
 
-def read_url(url: str, max_chars: int = 6000) -> str:
+def read_url(url: str, max_chars: int = 20000) -> str:
     """Fetch a page as clean Markdown (tables preserved) via Jina Reader."""
     resp = requests.get(
         f"https://r.jina.ai/{url}", timeout=90, headers={"User-Agent": "gaia-agent"}
@@ -33,7 +33,7 @@ def read_url(url: str, max_chars: int = 6000) -> str:
     return resp.text[:max_chars]
 
 
-def read_tables(url: str, max_chars: int = 6000) -> str:
+def read_tables(url: str, max_chars: int = 20000) -> str:
     """Fetch a URL and return its HTML tables as text with rows preserved.
 
     Use this for statistics, rankings or any data where columns must line up with
