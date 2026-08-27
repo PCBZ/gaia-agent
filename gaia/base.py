@@ -20,7 +20,9 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 from llama_index.core.llms import LLM
 from llama_index.llms.google_genai import GoogleGenAI
 
-DEFAULT_MODEL = "gemini-3.5-flash-lite"
+from gaia.config import CONFIG
+
+DEFAULT_MODEL = CONFIG["llm"]["default_model"]
 
 # Generic, question-agnostic policy prompt shared by every solver. It encodes
 # problem-solving discipline (not facts about any specific question) plus GAIA's
@@ -41,8 +43,9 @@ SYSTEM_PROMPT = (
     "- Base the answer only on text you actually retrieved. Never fabricate a name, "
     "number, or fact to fill a gap — if you have not found it, keep searching and "
     "reading. Do not fall back on an author's or a nearby name as the answer.\n"
-    "- Give proper nouns in full and unabbreviated (e.g. a complete city name); do "
-    "not drop any part of the name.\n"
+    "- Give names and list items exactly as the source states them, with all "
+    "descriptive words (e.g. 'freshly squeezed lemon juice', not 'lemon juice'; a "
+    "complete city name). Do not abbreviate, shorten, or drop any part.\n"
     "Finish with a single line:\n"
     "FINAL ANSWER: <answer>\n"
     "After the colon put only the answer, formatted exactly as asked: a number "
@@ -61,7 +64,7 @@ def default_llm() -> LLM:
     )
 
 
-def huggingface_llm(model: str = "Qwen/Qwen2.5-72B-Instruct") -> LLM:
+def huggingface_llm(model: str = CONFIG["llm"]["huggingface"]["model"]) -> LLM:
     """An HF Inference Providers LLM (OpenAI-compatible router), using HF_TOKEN.
 
     A separate free-tier quota from Gemini. Inject it explicitly, e.g.
@@ -72,7 +75,7 @@ def huggingface_llm(model: str = "Qwen/Qwen2.5-72B-Instruct") -> LLM:
 
     return OpenAILike(
         model=model,
-        api_base="https://router.huggingface.co/v1",
+        api_base=CONFIG["llm"]["huggingface"]["api_base"],
         api_key=os.environ["HF_TOKEN"],
         is_chat_model=True,
         is_function_calling_model=True,
@@ -80,7 +83,7 @@ def huggingface_llm(model: str = "Qwen/Qwen2.5-72B-Instruct") -> LLM:
     )
 
 
-def groq_llm(model: str = "openai/gpt-oss-120b") -> LLM:
+def groq_llm(model: str = CONFIG["llm"]["groq"]["model"]) -> LLM:
     """A Groq-hosted LLM (OpenAI-compatible), using GROQ_API_KEY.
 
     Groq's free tier is generous and needs no payment info. Inject explicitly,
@@ -90,7 +93,7 @@ def groq_llm(model: str = "openai/gpt-oss-120b") -> LLM:
 
     return OpenAILike(
         model=model,
-        api_base="https://api.groq.com/openai/v1",
+        api_base=CONFIG["llm"]["groq"]["api_base"],
         api_key=os.environ["GROQ_API_KEY"],
         is_chat_model=True,
         is_function_calling_model=True,
@@ -98,7 +101,7 @@ def groq_llm(model: str = "openai/gpt-oss-120b") -> LLM:
     )
 
 
-def openrouter_llm(model: str = "openai/gpt-4o-mini") -> LLM:
+def openrouter_llm(model: str = CONFIG["llm"]["openrouter"]["model"]) -> LLM:
     """An OpenRouter-hosted LLM (OpenAI-compatible), using OPENROUTER_API_KEY.
 
     OpenRouter's ':free' models cost no tokens (rate-limited). Pick one that
@@ -109,7 +112,7 @@ def openrouter_llm(model: str = "openai/gpt-4o-mini") -> LLM:
 
     return OpenAILike(
         model=model,
-        api_base="https://openrouter.ai/api/v1",
+        api_base=CONFIG["llm"]["openrouter"]["api_base"],
         api_key=os.environ["OPENROUTER_API_KEY"],
         is_chat_model=True,
         is_function_calling_model=True,

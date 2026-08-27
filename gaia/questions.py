@@ -11,16 +11,18 @@ import json
 import os
 from pathlib import Path
 
-import requests
+import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-SCORING_API = "https://agents-course-unit4-scoring.hf.space"
+from gaia.config import CONFIG
+
+SCORING_API = CONFIG["api"]["scoring_api"]
 # questions.json lives at the repo root (one level above this package).
 CACHE_FILE = Path(__file__).parent.parent / "questions.json"
 
 # The course /files endpoint no longer serves attachments, so we pull them from
 # the (gated) GAIA dataset instead. Requires HF_TOKEN + accepted dataset terms.
-GAIA_REPO = "gaia-benchmark/GAIA"
+GAIA_REPO = CONFIG["api"]["gaia_dataset"]
 WORKSPACE = Path(__file__).parent.parent / "workspace"
 
 
@@ -41,7 +43,7 @@ class Question(BaseModel):
 
 def fetch_questions(api: str = SCORING_API, timeout: float = 60.0) -> list[Question]:
     """GET /questions from the API and parse into Question models."""
-    resp = requests.get(f"{api}/questions", timeout=timeout)
+    resp = httpx.get(f"{api}/questions", timeout=timeout, follow_redirects=True)
     resp.raise_for_status()
     return [Question.model_validate(item) for item in resp.json()]
 

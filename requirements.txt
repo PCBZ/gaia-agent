@@ -10,10 +10,10 @@ pandas>=2.0          # read_tables (pd.read_html) + xlsx questions
 lxml>=5.0            # pd.read_html backend
 beautifulsoup4>=4.12 # pd.read_html fallback backend
 youtube-transcript-api>=1.0   # q7: fetch YouTube captions (no video download)
-# read_url uses Jina Reader (https://r.jina.ai) over plain requests — no package.
+# read_url uses Jina Reader (https://r.jina.ai).
 
 # Data / API / config
 pydantic>=2.0
-requests>=2.31
+httpx>=0.27          # HTTP client (GAIA API, Jina reader, Groq transcription)
 python-dotenv>=1.0
 huggingface_hub>=0.24

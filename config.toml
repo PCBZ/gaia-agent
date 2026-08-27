@@ -1,0 +1,28 @@
+# Non-secret configuration: endpoints, model names, dataset ids.
+# Secrets (API keys) live in .env, never here.
+
+[api]
+scoring_api  = "https://agents-course-unit4-scoring.hf.space"  # GAIA course questions/submit
+gaia_dataset = "gaia-benchmark/GAIA"                           # gated HF dataset for attachments
+jina_reader  = "https://r.jina.ai"                             # read_url: URL -> clean markdown
+
+[llm]
+# The provider used by default_llm() (Gemini via AI Studio).
+default_model = "gemini-3.5-flash-lite"
+
+[llm.huggingface]
+api_base = "https://router.huggingface.co/v1"
+model    = "Qwen/Qwen2.5-72B-Instruct"
+
+[llm.groq]
+api_base = "https://api.groq.com/openai/v1"
+model    = "openai/gpt-oss-120b"
+
+[llm.openrouter]
+api_base = "https://openrouter.ai/api/v1"
+model    = "openai/gpt-4o-mini"
+
+[audio]
+# Groq Whisper transcription (transcribe_audio).
+endpoint = "https://api.groq.com/openai/v1/audio/transcriptions"
+model    = "whisper-large-v3"

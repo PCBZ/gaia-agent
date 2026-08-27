@@ -7,10 +7,12 @@
 """
 from __future__ import annotations
 
-import requests
+import httpx
 from ddgs import DDGS
 from llama_index.core.tools import FunctionTool
 from llama_index.tools.code_interpreter import CodeInterpreterToolSpec
+
+from gaia.config import CONFIG
 
 
 def web_search(query: str, max_results: int = 10) -> str:
@@ -29,8 +31,11 @@ def web_search(query: str, max_results: int = 10) -> str:
 
 def read_url(url: str, max_chars: int = 20000) -> str:
     """Fetch a page as clean Markdown (tables preserved) via Jina Reader."""
-    resp = requests.get(
-        f"https://r.jina.ai/{url}", timeout=90, headers={"User-Agent": "gaia-agent"}
+    resp = httpx.get(
+        f"{CONFIG['api']['jina_reader']}/{url}",
+        timeout=90,
+        headers={"User-Agent": "gaia-agent"},
+        follow_redirects=True,
     )
     resp.raise_for_status()
     return resp.text[:max_chars]
