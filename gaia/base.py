@@ -20,7 +20,7 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 from llama_index.core.llms import LLM
 from llama_index.llms.google_genai import GoogleGenAI
 
-DEFAULT_MODEL = "gemini-3.6-flash"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
 # Generic, question-agnostic policy prompt shared by every solver. It encodes
 # problem-solving discipline (not facts about any specific question) plus GAIA's
@@ -50,6 +50,7 @@ def default_llm() -> LLM:
         model=DEFAULT_MODEL,
         api_key=os.environ["GEMINI_API_KEY"],
         temperature=0,
+        max_retries=8,  # ride out the free-tier per-minute limit (5/min, 429)
     )
 
 
@@ -69,6 +70,45 @@ def huggingface_llm(model: str = "Qwen/Qwen2.5-72B-Instruct") -> LLM:
         is_chat_model=True,
         is_function_calling_model=True,
         temperature=0,
+    )
+
+
+def groq_llm(model: str = "openai/gpt-oss-120b") -> LLM:
+    """A Groq-hosted LLM (OpenAI-compatible), using GROQ_API_KEY.
+
+    Groq's free tier is generous and needs no payment info. Inject explicitly,
+    e.g. `Q15().resolve(llm=groq_llm())`. Pick a tool-calling model.
+    """
+    from llama_index.llms.openai_like import OpenAILike
+
+    return OpenAILike(
+        model=model,
+        api_base="https://api.groq.com/openai/v1",
+        api_key=os.environ["GROQ_API_KEY"],
+        is_chat_model=True,
+        is_function_calling_model=True,
+        temperature=0,
+    )
+
+
+def openrouter_llm(model: str = "openai/gpt-4o-mini") -> LLM:
+    """An OpenRouter-hosted LLM (OpenAI-compatible), using OPENROUTER_API_KEY.
+
+    OpenRouter's ':free' models cost no tokens (rate-limited). Pick one that
+    supports tool calling, since FunctionAgent needs it. Inject explicitly,
+    e.g. `Q15().resolve(llm=openrouter_llm())`.
+    """
+    from llama_index.llms.openai_like import OpenAILike
+
+    return OpenAILike(
+        model=model,
+        api_base="https://openrouter.ai/api/v1",
+        api_key=os.environ["OPENROUTER_API_KEY"],
+        is_chat_model=True,
+        is_function_calling_model=True,
+        temperature=0,
+        max_retries=8,  # ride out free-tier per-minute rate limits (429 + Retry-After)
+        timeout=120,
     )
 
 
