@@ -13,9 +13,12 @@ from llama_index.core.tools import FunctionTool
 from llama_index.tools.code_interpreter import CodeInterpreterToolSpec
 
 
-def web_search(query: str, max_results: int = 6) -> str:
+def web_search(query: str, max_results: int = 10) -> str:
     """Search the web. Returns lines of 'title | url | snippet'."""
-    results = list(DDGS().text(query, max_results=max_results, backend="auto"))
+    try:
+        results = list(DDGS().text(query, max_results=max_results, backend="auto"))
+    except Exception as exc:  # noqa: BLE001 - ddgs raises on rate limit / no hits
+        return f"Search failed ({exc}); try rephrasing the query."
     if not results:
         return "No results."
     return "\n".join(
