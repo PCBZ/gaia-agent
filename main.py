@@ -13,12 +13,13 @@ from q10 import Q10
 from q11 import Q11
 from q12 import Q12
 from q13 import Q13
+from q14 import Q14
 from q15 import Q15
 from q17 import Q17
 from q19 import Q19
 
 # Instantiate each solver; key the registry by its GAIA question number.
-SOLVERS = {s.number: s for s in [Q1(), Q3(), Q5(), Q6(), Q7(), Q9(), Q10(), Q11(), Q12(), Q13(), Q15(), Q17(), Q19()]}
+SOLVERS = {s.number: s for s in [Q1(), Q3(), Q5(), Q6(), Q7(), Q9(), Q10(), Q11(), Q12(), Q13(), Q14(), Q15(), Q17(), Q19()]}
 
 
 def main() -> None:
