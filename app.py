@@ -75,11 +75,13 @@ def solve_one(number: int):
     return _run
 
 
-def submit_all(profile: gr.OAuthProfile | None, *answers: str):
+IS_SPACE = bool(os.getenv("SPACE_ID"))
+
+
+def _submit(username: str | None, answers) -> str:
     """Submit every row's current answer for scoring."""
-    if profile is None:
-        return "⚠️ Please log in to Hugging Face with the button above."
-    username = profile.username
+    if not username:
+        return "⚠️ Provide your Hugging Face username (log in on the Space)."
 
     space_id = os.getenv("SPACE_ID")
     agent_code = (
@@ -107,13 +109,27 @@ def submit_all(profile: gr.OAuthProfile | None, *answers: str):
         return f"❌ Submit failed: {exc}"
 
 
+def submit_space(profile: gr.OAuthProfile | None, *answers: str) -> str:
+    """On a Space: username comes from the HF OAuth login."""
+    return _submit(profile.username if profile else None, answers)
+
+
+def submit_local(username: str, *answers: str) -> str:
+    """Locally (no OAuth): username comes from a text box."""
+    return _submit(username, answers)
+
+
 with gr.Blocks(title="GAIA Agent") as demo:
     gr.Markdown("# 🤖 GAIA Agent — HF Agents course final project")
     gr.Markdown(
-        "Log in, run each question with its **Run** button (answer appears in the "
-        "row), edit if needed, then **Submit all** for scoring."
+        "Run each question with its **Run** button (answer appears in the row), "
+        "edit if needed, then **Submit all** for scoring."
     )
-    gr.LoginButton()
+    if IS_SPACE:
+        gr.LoginButton()
+        username_box = None
+    else:
+        username_box = gr.Textbox(label="Hugging Face username", value="Devil02047")
 
     answer_boxes = []
     for i, q in enumerate(load_questions()):
@@ -133,7 +149,10 @@ with gr.Blocks(title="GAIA Agent") as demo:
 
     submit_btn = gr.Button("Submit all answers", variant="primary")
     status = gr.Markdown()
-    submit_btn.click(submit_all, inputs=answer_boxes, outputs=status)
+    if IS_SPACE:
+        submit_btn.click(submit_space, inputs=answer_boxes, outputs=status)
+    else:
+        submit_btn.click(submit_local, inputs=[username_box, *answer_boxes], outputs=status)
 
 
 if __name__ == "__main__":
