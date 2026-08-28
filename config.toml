@@ -20,8 +20,9 @@ api_base = "https://api.groq.com/openai/v1"
 model    = "openai/gpt-oss-120b"
 
 [llm.openrouter]
-api_base = "https://openrouter.ai/api/v1"
-model    = "openai/gpt-4o-mini"
+api_base      = "https://openrouter.ai/api/v1"
+model         = "openai/gpt-4o-mini"                # default (cheap)
+advanced_model = "deepseek/deepseek-chat-v3-0324"   # stronger, for hard questions
 
 [audio]
 # Groq Whisper transcription (transcribe_audio).

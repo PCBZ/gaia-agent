@@ -133,6 +133,12 @@ def openrouter_llm(model: str = CONFIG["llm"]["openrouter"]["model"]) -> LLM:
     )
 
 
+def advanced_open_router_llm() -> LLM:
+    """A stronger OpenRouter model (DeepSeek V3 by default) for questions the cheap
+    default gets wrong — ~10x cheaper than gpt-4o with reliable tool calling."""
+    return openrouter_llm(CONFIG["llm"]["openrouter"]["advanced_model"])
+
+
 class QuestionSolver(ABC):
     """Solves one GAIA question."""
 

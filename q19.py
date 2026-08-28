@@ -31,7 +31,9 @@ class Q19(QuestionSolver):
             system_prompt=SYSTEM,
         )
         prompt = f"{question.question}\n\nSpreadsheet contents:\n\n{table}"
-        resp = await agent.run(user_msg=prompt)  # pyright: ignore[reportDeprecated]
+        resp = await agent.run(  # pyright: ignore[reportDeprecated]
+            user_msg=prompt, max_iterations=30, early_stopping_method="generate"
+        )
         return str(resp)
 
 

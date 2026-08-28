@@ -10,6 +10,7 @@ llama-index-llms-openai-like>=0.7
 llama-index-tools-code-interpreter>=0.5
 ddgs>=9
 pandas>=2.2,<3      # HF Space is Python 3.10; pandas 3.x needs 3.11+
+openpyxl>=3.1       # pandas.read_excel backend (#19 xlsx)
 lxml>=5
 beautifulsoup4>=4.12
 youtube-transcript-api>=1.0

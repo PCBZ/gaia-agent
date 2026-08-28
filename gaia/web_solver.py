@@ -18,5 +18,11 @@ class WebSolver(QuestionSolver):
     async def solve(self, llm: LLM) -> str:
         question = self.get_question()
         agent = FunctionAgent(tools=web_tools(), llm=llm, system_prompt=SYSTEM_PROMPT)
-        resp = await agent.run(user_msg=question.question)  # pyright: ignore[reportDeprecated]
+        # early_stopping_method="generate": on reaching the step cap, produce an
+        # answer from what's gathered instead of raising "Max iterations reached".
+        resp = await agent.run(  # pyright: ignore[reportDeprecated]
+            user_msg=question.question,
+            max_iterations=30,
+            early_stopping_method="generate",
+        )
         return str(resp)

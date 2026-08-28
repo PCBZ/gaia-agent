@@ -7,33 +7,33 @@ from q10 import Q10
 from q14 import Q14
 from q19 import Q19
 
-from gaia.base import openrouter_llm
+from gaia.base import advanced_open_router_llm
 from gaia.web_solver import WebSolver
 from gaia.reasoning_solver import ReasoningSolver
 from gaia.coding_solver import CodingSolver
 
 # Instantiate each solver; key the registry by its GAIA question number.
-# #1, #8, #16, #18 are plain retrieval questions handled by the generic WebSolver.
+# Most run on the default (gpt-4o-mini); the reasoning/accuracy-heavy ones that
+# mini failed are pinned to a stronger model (DeepSeek V3) via .with_llm(advanced_open_router_llm).
 SOLVERS = {
     s.number: s
     for s in [
-        WebSolver(1),
+        WebSolver(1).with_llm(advanced_open_router_llm),
         ReasoningSolver(3),
         WebSolver(5),
-        ReasoningSolver(6),
+        ReasoningSolver(6).with_llm(advanced_open_router_llm),
         Q7(),
-        # #8 wanders to distractor pages on weaker models; gpt-4o stays on source.
-        WebSolver(8).with_llm(lambda: openrouter_llm("openai/gpt-4o")),
-        ReasoningSolver(9),
-        Q10(),
+        WebSolver(8).with_llm(advanced_open_router_llm),
+        ReasoningSolver(9).with_llm(advanced_open_router_llm),
+        Q10().with_llm(advanced_open_router_llm),
         WebSolver(11),
         CodingSolver(12),
-        WebSolver(13),
+        WebSolver(13).with_llm(advanced_open_router_llm),
         Q14(),
         WebSolver(15),
         WebSolver(16),
-        WebSolver(17),
-        WebSolver(18),
+        WebSolver(17).with_llm(advanced_open_router_llm),
+        WebSolver(18).with_llm(advanced_open_router_llm),
         Q19(),
         WebSolver(20),
     ]
