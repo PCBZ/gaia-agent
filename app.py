@@ -29,10 +29,21 @@ except Exception:  # noqa: BLE001 - not on a ZeroGPU Space
     pass
 
 from gaia.config import CONFIG
-from gaia.questions import load_questions
+from gaia.questions import download_attachment, load_questions
 from main import SOLVERS
 
 SCORING_API = CONFIG["api"]["scoring_api"]
+AUDIO_EXTS = (".mp3", ".wav", ".m4a", ".ogg", ".flac")
+
+
+def audio_path(q):
+    """Local path to a question's audio attachment, or None (not audio / no access)."""
+    if not q.file_name.lower().endswith(AUDIO_EXTS):
+        return None
+    try:
+        return str(download_attachment(q))
+    except Exception:  # noqa: BLE001 - no HF_TOKEN / gated access / network
+        return None
 
 _FINAL_RE = re.compile(r"FINAL ANSWER:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 
@@ -107,8 +118,14 @@ with gr.Blocks(title="GAIA Agent") as demo:
     answer_boxes = []
     for i, q in enumerate(load_questions()):
         number = i + 1
+        audio = audio_path(q)
         with gr.Row(equal_height=True):
-            gr.Markdown(f"**#{number}** {q.question}", elem_id=f"q{number}")
+            with gr.Column(scale=6):
+                gr.Markdown(f"**#{number}** {q.question}", elem_id=f"q{number}")
+                if audio:
+                    gr.Audio(value=audio, label="attached audio", interactive=False)
+                elif q.file_name.lower().endswith(AUDIO_EXTS):
+                    gr.Markdown("🔊 (audio attachment)")
             run_btn = gr.Button("Run", scale=0, min_width=80)
             ans = gr.Textbox(label="answer", show_label=False, scale=2, container=False)
         answer_boxes.append(ans)
