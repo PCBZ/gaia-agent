@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# GAIA attachments (gated dataset — downloaded at runtime)
+workspace/
+answers.json
