@@ -53,9 +53,9 @@ SOLVERS = {
             hint="Write the city name in full — use 'Saint', never the abbreviation 'St.'.",
         ),
         WebSolver(17).with_llm(advanced_open_router_llm),
-        WebSolver(18).with_llm(advanced_open_router_llm),
+        WebSolver(18).with_llm(reasoning_open_router_llm),
         Q19(),
-        WebSolver(20).with_llm(advanced_open_router_llm),
+        WebSolver(20).with_llm(reasoning_open_router_llm),
     ]
 }
 
