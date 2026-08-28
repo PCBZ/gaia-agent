@@ -1,24 +1,24 @@
-# Pinned to versions verified to co-exist locally, so pip does not backtrack
-# during the (slow) HF Space build. sdk_version in README.md must match gradio.
+# Version ranges compatible with HF Space Python 3.10 and HF's forced ZeroGPU
+# packages (torch, gradio[oauth,mcp], spaces). gradio must match README sdk_version.
 
 # LlamaIndex core + LLMs
-llama-index-core==0.14.24
-llama-index-llms-google-genai==0.10.0
-llama-index-llms-openai-like==0.7.2
+llama-index-core>=0.14,<0.15
+llama-index-llms-google-genai>=0.10
+llama-index-llms-openai-like>=0.7
 
 # Tools
-llama-index-tools-code-interpreter==0.5.0
-ddgs==9.15.0
-pandas>=2.2,<3      # HF Space runs Python 3.10; pandas 3.x needs 3.11+
-lxml>=5            # 3.10-compatible
-beautifulsoup4==4.15.0
-youtube-transcript-api==1.2.4
+llama-index-tools-code-interpreter>=0.5
+ddgs>=9
+pandas>=2.2,<3      # HF Space is Python 3.10; pandas 3.x needs 3.11+
+lxml>=5
+beautifulsoup4>=4.12
+youtube-transcript-api>=1.0
 
 # App (HF Space) — must equal README sdk_version
 gradio==6.26.0
 
 # Data / API / config
-pydantic==2.13.4
-httpx==0.28.1
-python-dotenv==1.2.3
+pydantic>=2,<3
+httpx>=0.27
+python-dotenv>=1.0
 huggingface_hub>=0.24
