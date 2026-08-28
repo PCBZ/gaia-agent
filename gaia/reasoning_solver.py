@@ -19,12 +19,20 @@ REASONING_PROMPT = (
 
 
 class ReasoningSolver(QuestionSolver):
-    """Answers a reasoning question. Pass the number."""
+    """Answers a reasoning question. Pass the number.
 
-    def __init__(self, number: int) -> None:
+    `hint` is an optional task-clarification note (e.g. a domain rule) appended to
+    the question — never the answer itself.
+    """
+
+    def __init__(self, number: int, hint: str | None = None) -> None:
         self.number = number
+        self.hint = hint
 
     async def solve(self, llm: LLM) -> str:
         question = self.get_question()
-        resp = await llm.acomplete(REASONING_PROMPT + "\n\n" + question.question)
+        prompt = REASONING_PROMPT + "\n\n" + question.question
+        if self.hint:
+            prompt += f"\n\nNote: {self.hint}"
+        resp = await llm.acomplete(prompt)
         return str(resp)

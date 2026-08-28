@@ -145,6 +145,12 @@ def premium_open_router_llm() -> LLM:
     return openrouter_llm(CONFIG["llm"]["openrouter"]["premium_model"])
 
 
+def reasoning_open_router_llm() -> LLM:
+    """A cheap but rigorous reasoning model (gpt-5-mini) for questions needing careful
+    logic/classification rather than web retrieval — e.g. #9's strict botany rules."""
+    return openrouter_llm(CONFIG["llm"]["openrouter"]["reasoning_model"])
+
+
 class QuestionSolver(ABC):
     """Solves one GAIA question."""
 
