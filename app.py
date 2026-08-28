@@ -1,5 +1,8 @@
-"""Gradio app for the HF Agents course final project (shaped like the course
-template): log in with HF, run our GAIA agent on all questions, submit for scoring.
+"""Gradio app for the HF Agents course final project.
+
+Unlike the course template (one button that runs + submits everything), this lays
+out all questions up front: each row has the question, its own Run button, and an
+answer box filled in place. A final Submit button sends every answer for scoring.
 
 Space secrets needed: OPENROUTER_API_KEY, GROQ_API_KEY, JINA_API_KEY, HF_TOKEN
 (HF_TOKEN must have accepted the gated gaia-benchmark/GAIA dataset for attachments).
@@ -13,17 +16,16 @@ import gradio as gr
 import httpx
 import pandas as pd
 
-# ZeroGPU Spaces require at least one @spaces.GPU function to initialize the
-# runtime, otherwise the app runs internally but HF returns RUNTIME_ERROR / 503.
-# We don't use the GPU, so this is a never-called stub. Guarded so local imports
-# (no `spaces` package) still work.
+# ZeroGPU Spaces need at least one @spaces.GPU function to initialize the runtime,
+# otherwise the app runs internally but HF returns RUNTIME_ERROR / 503. We don't use
+# the GPU; this is a never-called stub. Guarded so local imports still work.
 try:
     import spaces
 
     @spaces.GPU
     def _gpu_stub():  # noqa: D401 - satisfies ZeroGPU; never called
         return None
-except Exception:  # noqa: BLE001 - not running on a ZeroGPU Space
+except Exception:  # noqa: BLE001 - not on a ZeroGPU Space
     pass
 
 from gaia.config import CONFIG
@@ -47,10 +49,25 @@ def final_answer(text: str) -> str:
     return ans.strip().strip("\"'").rstrip(".").strip()
 
 
-def run_and_submit_all(profile: gr.OAuthProfile | None):
-    """Run every registered solver and submit the answers for scoring."""
+def solve_one(number: int):
+    """Build the click handler for one question's Run button."""
+
+    def _run() -> str:
+        solver = SOLVERS.get(number)
+        if solver is None:
+            return ""  # unsolved (e.g. #2, #4)
+        try:
+            return final_answer(solver.resolve())
+        except Exception as exc:  # noqa: BLE001
+            return f"ERROR: {exc}"
+
+    return _run
+
+
+def submit_all(profile: gr.OAuthProfile | None, *answers: str):
+    """Submit every row's current answer for scoring."""
     if profile is None:
-        return "⚠️ Please log in to Hugging Face with the button above.", None
+        return "⚠️ Please log in to Hugging Face with the button above."
     username = profile.username
 
     space_id = os.getenv("SPACE_ID")
@@ -61,50 +78,46 @@ def run_and_submit_all(profile: gr.OAuthProfile | None):
     )
 
     questions = load_questions()
-    answers, rows = [], []
-    for i, q in enumerate(questions):
-        number = i + 1
-        solver = SOLVERS.get(number)
-        if solver is None:
-            ans = ""  # unsolved (e.g. #2, #4)
-        else:
-            try:
-                ans = final_answer(solver.resolve())
-            except Exception as exc:  # noqa: BLE001 - keep going on any failure
-                ans = f"ERROR: {exc}"
-        answers.append({"task_id": q.task_id, "submitted_answer": ans})
-        rows.append({"#": number, "Question": q.question[:60], "Answer": ans})
-
-    payload = {"username": username, "agent_code": agent_code, "answers": answers}
+    payload_answers = [
+        {"task_id": q.task_id, "submitted_answer": (ans or "").strip()}
+        for q, ans in zip(questions, answers)
+    ]
+    payload = {"username": username, "agent_code": agent_code, "answers": payload_answers}
     try:
         resp = httpx.post(f"{SCORING_API}/submit", json=payload, timeout=180)
         resp.raise_for_status()
         r = resp.json()
-        status = (
+        return (
             f"✅ Submitted as {r.get('username')} — Score: {r.get('score')}% "
             f"({r.get('correct_count')}/{r.get('total_attempted')} correct)\n"
             f"{r.get('message', '')}"
         )
     except Exception as exc:  # noqa: BLE001
-        status = f"❌ Submit failed: {exc}"
-
-    return status, pd.DataFrame(rows)
+        return f"❌ Submit failed: {exc}"
 
 
 with gr.Blocks(title="GAIA Agent") as demo:
     gr.Markdown("# 🤖 GAIA Agent — HF Agents course final project")
     gr.Markdown(
-        "Log in with Hugging Face, then run the LlamaIndex agent on all 20 GAIA "
-        "questions and submit for scoring."
+        "Log in, run each question with its **Run** button (answer appears in the "
+        "row), edit if needed, then **Submit all** for scoring."
     )
     gr.LoginButton()
-    run_btn = gr.Button("Run evaluation & submit all answers", variant="primary")
+
+    answer_boxes = []
+    for i, q in enumerate(load_questions()):
+        number = i + 1
+        with gr.Row(equal_height=True):
+            gr.Markdown(f"**#{number}** {q.question}", elem_id=f"q{number}")
+            run_btn = gr.Button("Run", scale=0, min_width=80)
+            ans = gr.Textbox(label="answer", show_label=False, scale=2, container=False)
+        answer_boxes.append(ans)
+        run_btn.click(solve_one(number), outputs=ans)
+
+    submit_btn = gr.Button("Submit all answers", variant="primary")
     status = gr.Markdown()
-    table = gr.Dataframe(headers=["#", "Question", "Answer"], wrap=True)
-    run_btn.click(run_and_submit_all, outputs=[status, table])
+    submit_btn.click(submit_all, inputs=answer_boxes, outputs=status)
 
 
 if __name__ == "__main__":
-    # ssr_mode=False: gradio's SSR uses a Node.js proxy that HF Spaces can't run
-    # (the app starts then "Stopping Node.js server..." -> RUNTIME_ERROR).
     demo.launch(ssr_mode=False)
