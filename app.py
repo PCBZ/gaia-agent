@@ -13,6 +13,19 @@ import gradio as gr
 import httpx
 import pandas as pd
 
+# ZeroGPU Spaces require at least one @spaces.GPU function to initialize the
+# runtime, otherwise the app runs internally but HF returns RUNTIME_ERROR / 503.
+# We don't use the GPU, so this is a never-called stub. Guarded so local imports
+# (no `spaces` package) still work.
+try:
+    import spaces
+
+    @spaces.GPU
+    def _gpu_stub():  # noqa: D401 - satisfies ZeroGPU; never called
+        return None
+except Exception:  # noqa: BLE001 - not running on a ZeroGPU Space
+    pass
+
 from gaia.config import CONFIG
 from gaia.questions import load_questions
 from main import SOLVERS
