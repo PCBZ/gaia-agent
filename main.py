@@ -29,7 +29,7 @@ SOLVERS = {
         ).with_llm(reasoning_open_router_llm),
         ReasoningSolver(3),
         WebSolver(5),
-        ReasoningSolver(6).with_llm(advanced_open_router_llm),
+        ReasoningSolver(6).with_llm(reasoning_open_router_llm),
         Q7(),
         WebSolver(8).with_llm(premium_open_router_llm),
         ReasoningSolver(
@@ -47,7 +47,7 @@ SOLVERS = {
         CodingSolver(12),
         WebSolver(13).with_llm(advanced_open_router_llm),
         Q14(),
-        WebSolver(15),
+        WebSolver(15).with_llm(reasoning_open_router_llm),
         WebSolver(
             16,
             hint="Write the city name in full — use 'Saint', never the abbreviation 'St.'.",
