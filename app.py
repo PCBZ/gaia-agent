@@ -92,4 +92,6 @@ with gr.Blocks(title="GAIA Agent") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    # ssr_mode=False: gradio's SSR uses a Node.js proxy that HF Spaces can't run
+    # (the app starts then "Stopping Node.js server..." -> RUNTIME_ERROR).
+    demo.launch(ssr_mode=False)
