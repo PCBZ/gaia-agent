@@ -86,4 +86,6 @@ with gr.Blocks(title="GAIA Agent") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    # ssr_mode=False: gradio 6 defaults to SSR (a Node.js proxy) which HF Spaces
+    # can't run, so the app would start then die. Plain Python serving works.
+    demo.launch(ssr_mode=False)
