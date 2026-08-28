@@ -14,8 +14,8 @@ lxml>=5
 beautifulsoup4>=4.12
 youtube-transcript-api>=1.0
 
-# App (HF Space) — must equal README sdk_version
-gradio==6.26.0
+# App (HF Space) — must equal README sdk_version (gradio 5.x: no SSR/Node, works on Spaces)
+gradio==5.25.2
 
 # Data / API / config
 pydantic>=2,<3

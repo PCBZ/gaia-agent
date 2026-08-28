@@ -4,9 +4,10 @@ emoji: 🤖
 colorFrom: blue
 colorTo: green
 sdk: gradio
-sdk_version: 6.26.0
+sdk_version: 5.25.2
 app_file: app.py
 pinned: false
+hf_oauth: true
 ---
 
 # gaia-agent

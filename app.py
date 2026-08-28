@@ -1,13 +1,12 @@
-"""Gradio app for the HF Agents course final project.
-
-Runs the GAIA agent on all 20 questions and submits the answers to the course
-scoring API. Deployable as a free Hugging Face Space (CPU basic).
+"""Gradio app for the HF Agents course final project (shaped like the course
+template): log in with HF, run our GAIA agent on all questions, submit for scoring.
 
 Space secrets needed: OPENROUTER_API_KEY, GROQ_API_KEY, JINA_API_KEY, HF_TOKEN
 (HF_TOKEN must have accepted the gated gaia-benchmark/GAIA dataset for attachments).
 """
 from __future__ import annotations
 
+import os
 import re
 
 import gradio as gr
@@ -19,7 +18,6 @@ from gaia.questions import load_questions
 from main import SOLVERS
 
 SCORING_API = CONFIG["api"]["scoring_api"]
-DEFAULT_AGENT_CODE = "https://github.com/PCBZ/gaia-agent"
 
 _FINAL_RE = re.compile(r"FINAL ANSWER:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 
@@ -36,14 +34,22 @@ def final_answer(text: str) -> str:
     return ans.strip().strip("\"'").rstrip(".").strip()
 
 
-def run_and_submit(username: str, agent_code: str, progress=gr.Progress()):
-    username = (username or "").strip()
-    if not username:
-        return "⚠️ Enter your Hugging Face username.", pd.DataFrame()
+def run_and_submit_all(profile: gr.OAuthProfile | None):
+    """Run every registered solver and submit the answers for scoring."""
+    if profile is None:
+        return "⚠️ Please log in to Hugging Face with the button above.", None
+    username = profile.username
+
+    space_id = os.getenv("SPACE_ID")
+    agent_code = (
+        f"https://huggingface.co/spaces/{space_id}/tree/main"
+        if space_id
+        else "https://github.com/PCBZ/gaia-agent"
+    )
 
     questions = load_questions()
     answers, rows = [], []
-    for i, q in enumerate(progress.tqdm(questions, desc="Solving")):
+    for i, q in enumerate(questions):
         number = i + 1
         solver = SOLVERS.get(number)
         if solver is None:
@@ -54,38 +60,36 @@ def run_and_submit(username: str, agent_code: str, progress=gr.Progress()):
             except Exception as exc:  # noqa: BLE001 - keep going on any failure
                 ans = f"ERROR: {exc}"
         answers.append({"task_id": q.task_id, "submitted_answer": ans})
-        rows.append([number, q.question[:60], ans])
+        rows.append({"#": number, "Question": q.question[:60], "Answer": ans})
 
     payload = {"username": username, "agent_code": agent_code, "answers": answers}
     try:
-        resp = httpx.post(f"{SCORING_API}/submit", json=payload, timeout=120)
+        resp = httpx.post(f"{SCORING_API}/submit", json=payload, timeout=180)
         resp.raise_for_status()
         r = resp.json()
-        msg = (
-            f"✅ Score: {r['score']}%  "
-            f"({r['correct_count']}/{r['total_attempted']} correct)\n{r.get('message', '')}"
+        status = (
+            f"✅ Submitted as {r.get('username')} — Score: {r.get('score')}% "
+            f"({r.get('correct_count')}/{r.get('total_attempted')} correct)\n"
+            f"{r.get('message', '')}"
         )
     except Exception as exc:  # noqa: BLE001
-        msg = f"❌ Submit failed: {exc}"
+        status = f"❌ Submit failed: {exc}"
 
-    return msg, pd.DataFrame(rows, columns=["#", "question", "answer"])
+    return status, pd.DataFrame(rows)
 
 
 with gr.Blocks(title="GAIA Agent") as demo:
     gr.Markdown("# 🤖 GAIA Agent — HF Agents course final project")
     gr.Markdown(
-        "Runs a LlamaIndex agent on all 20 GAIA questions and submits for scoring."
+        "Log in with Hugging Face, then run the LlamaIndex agent on all 20 GAIA "
+        "questions and submit for scoring."
     )
-    with gr.Row():
-        username = gr.Textbox(label="Hugging Face username")
-        agent_code = gr.Textbox(label="Agent code URL", value=DEFAULT_AGENT_CODE)
-    run_btn = gr.Button("Run evaluation & submit", variant="primary")
-    result = gr.Markdown()
-    table = gr.Dataframe(headers=["#", "question", "answer"], wrap=True)
-    run_btn.click(run_and_submit, [username, agent_code], [result, table])
+    gr.LoginButton()
+    run_btn = gr.Button("Run evaluation & submit all answers", variant="primary")
+    status = gr.Markdown()
+    table = gr.Dataframe(headers=["#", "Question", "Answer"], wrap=True)
+    run_btn.click(run_and_submit_all, outputs=[status, table])
 
 
 if __name__ == "__main__":
-    # ssr_mode=False: gradio 6 defaults to SSR (a Node.js proxy) which HF Spaces
-    # can't run, so the app would start then die. Plain Python serving works.
-    demo.launch(ssr_mode=False)
+    demo.launch()
