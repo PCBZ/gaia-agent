@@ -1,10 +1,7 @@
-"""GAIA question #12: "What is the final numeric output from the attached Python
-code?"
+"""A generic solver for questions that ship code to run.
 
-Downloads the .py from the GAIA dataset and gives the model LlamaIndex's official
-CodeInterpreterToolSpec (subprocess execution). Safe because we inspected the file.
-
-Requires: pip install llama-index-tools-code-interpreter
+Downloads the attached source file and gives the model a code_interpreter tool to
+execute it, then reads off the result.
 """
 from __future__ import annotations
 
@@ -21,21 +18,20 @@ SYSTEM = (
 )
 
 
-class Q12(QuestionSolver):
-    number = 12
+class CodingSolver(QuestionSolver):
+    """Answers a question whose attachment is code to execute. Pass the number."""
+
+    def __init__(self, number: int) -> None:
+        self.number = number
 
     async def solve(self, llm: LLM) -> str:
         question = self.get_question()
         code = download_attachment(question).read_text(encoding="utf-8")
-
-        agent = FunctionAgent(tools=CodeInterpreterToolSpec().to_tool_list(), 
-                              llm=llm, 
-                              system_prompt=SYSTEM)
-
+        agent = FunctionAgent(
+            tools=CodeInterpreterToolSpec().to_tool_list(),
+            llm=llm,
+            system_prompt=SYSTEM,
+        )
         prompt = f"{question.question}\n\n```python\n{code}\n```"
         resp = await agent.run(user_msg=prompt)  # pyright: ignore[reportDeprecated]
         return str(resp)
-
-
-if __name__ == "__main__":
-    print(Q12().resolve())

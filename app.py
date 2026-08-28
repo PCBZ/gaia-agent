@@ -14,7 +14,6 @@ import gradio as gr
 import httpx
 import pandas as pd
 
-from gaia.base import openrouter_llm
 from gaia.config import CONFIG
 from gaia.questions import load_questions
 from main import SOLVERS
@@ -37,11 +36,6 @@ def final_answer(text: str) -> str:
     return ans.strip().strip("\"'").rstrip(".").strip()
 
 
-def _llm_for(number: int):
-    # #8 needs a stronger model to stay on the named source; the rest use gpt-4o-mini.
-    return openrouter_llm("openai/gpt-4o") if number == 8 else openrouter_llm()
-
-
 def run_and_submit(username: str, agent_code: str, progress=gr.Progress()):
     username = (username or "").strip()
     if not username:
@@ -56,7 +50,7 @@ def run_and_submit(username: str, agent_code: str, progress=gr.Progress()):
             ans = ""  # unsolved (e.g. #2, #4)
         else:
             try:
-                ans = final_answer(solver.resolve(llm=_llm_for(number)))
+                ans = final_answer(solver.resolve())
             except Exception as exc:  # noqa: BLE001 - keep going on any failure
                 ans = f"ERROR: {exc}"
         answers.append({"task_id": q.task_id, "submitted_answer": ans})

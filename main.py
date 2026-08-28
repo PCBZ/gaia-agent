@@ -1,43 +1,46 @@
-"""Entry point: dispatch to a question's solver via a registry."""
+"""Registry of all question solvers. Run this file to solve them all in order."""
 from __future__ import annotations
 
-import argparse
 
-from q1 import Q1
-from q3 import Q3
-from q5 import Q5
-from q6 import Q6
 from q7 import Q7
-from q9 import Q9
 from q10 import Q10
-from q11 import Q11
-from q12 import Q12
-from q13 import Q13
 from q14 import Q14
-from q15 import Q15
-from q17 import Q17
 from q19 import Q19
-from q20 import Q20
 
+from gaia.base import openrouter_llm
 from gaia.web_solver import WebSolver
+from gaia.reasoning_solver import ReasoningSolver
+from gaia.coding_solver import CodingSolver
 
 # Instantiate each solver; key the registry by its GAIA question number.
-SOLVERS = {s.number: s for s in [Q1(), Q3(), Q5(), Q6(), Q7(), Q9(), Q10(), Q11(), Q12(), Q13(), Q14(), Q15(), Q17(), Q19(), Q20(), WebSolver(8), WebSolver(16), WebSolver(18)]}
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Run a GAIA question solver")
-    parser.add_argument(
-        "-n", "--number", type=int, default=3,
-        help=f"question number to solve (available: {sorted(SOLVERS)})",
-    )
-    args = parser.parse_args()
-
-    solver = SOLVERS.get(args.number)
-    if solver is None:
-        parser.error(f"no solver for #{args.number}; available: {sorted(SOLVERS)}")
-    print(solver.resolve())
+# #1, #8, #16, #18 are plain retrieval questions handled by the generic WebSolver.
+SOLVERS = {
+    s.number: s
+    for s in [
+        WebSolver(1),
+        ReasoningSolver(3),
+        WebSolver(5),
+        ReasoningSolver(6),
+        Q7(),
+        # #8 wanders to distractor pages on weaker models; gpt-4o stays on source.
+        WebSolver(8).with_llm(openrouter_llm("openai/gpt-4o")),
+        ReasoningSolver(9),
+        Q10(),
+        WebSolver(11),
+        CodingSolver(12),
+        WebSolver(13),
+        Q14(),
+        WebSolver(15),
+        WebSolver(16),
+        WebSolver(17),
+        WebSolver(18),
+        Q19(),
+        WebSolver(20),
+    ]
+}
 
 
 if __name__ == "__main__":
-    main()
+    for number in sorted(SOLVERS):
+        print(f"=== #{number} ===")
+        print(SOLVERS[number].resolve())

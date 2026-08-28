@@ -1,8 +1,9 @@
 """Abstract base for per-question solvers.
 
 Each GAIA question is solved by a QuestionSolver subclass that implements the
-async `solve(llm)` method. The shared `resolve(llm=None)` entry point defaults
-the LLM to GoogleGenAI (Gemini) and runs the async work synchronously.
+async `solve(llm)` method. The shared `resolve(llm=None)` entry point picks the
+LLM as: the given llm, else the solver's own `.llm`, else `default_llm()`
+(OpenRouter gpt-4o-mini), and runs the async work synchronously.
 """
 from __future__ import annotations
 
@@ -57,14 +58,21 @@ SYSTEM_PROMPT = (
 )
 
 
-def default_llm() -> LLM:
-    """The LLM used when a solver's resolve() is called without one."""
+def gemini_llm() -> LLM:
+    """Gemini via AI Studio (needs GEMINI_API_KEY + credit). Not the default: its
+    free tier is tiny and prepay may be exhausted."""
     return GoogleGenAI(
         model=DEFAULT_MODEL,
         api_key=os.environ["GEMINI_API_KEY"],
         temperature=0,
         max_retries=8,  # ride out the free-tier per-minute limit (5/min, 429)
     )
+
+
+def default_llm() -> LLM:
+    """The LLM used when a solver's resolve() is called without one — OpenRouter
+    gpt-4o-mini (reliable and cheap; the Gemini/HF free tiers are exhausted)."""
+    return openrouter_llm()
 
 
 def huggingface_llm(model: str = CONFIG["llm"]["huggingface"]["model"]) -> LLM:
@@ -129,6 +137,7 @@ class QuestionSolver(ABC):
     """Solves one GAIA question."""
 
     number: int  # GAIA question number (1-based), used by the registry
+    llm: Optional[LLM] = None
 
     @property
     def index(self) -> int:
@@ -141,12 +150,17 @@ class QuestionSolver(ABC):
 
         return load_questions()[self.index]
 
+    def with_llm(self, llm: LLM) -> "QuestionSolver":
+        """Set this solver's preferred LLM and return self (for inline use)."""
+        self.llm = llm
+        return self
+
     def resolve(self, llm: Optional[LLM] = None) -> str:
-        """Public entry point. Injects GoogleGenAI unless another LLM is given."""
+        """Public entry point. Uses the given llm, else this solver's llm, else default."""
         return asyncio.run(self._resolve(llm))
 
     async def _resolve(self, llm: Optional[LLM]) -> str:
-        return await self.solve(llm or default_llm())
+        return await self.solve(llm or self.llm or default_llm())
 
     @abstractmethod
     async def solve(self, llm: LLM) -> str:

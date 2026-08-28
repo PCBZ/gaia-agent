@@ -1,14 +1,4 @@
 """A generic solver for web-retrieval questions.
-
-Most GAIA questions are answered the same way: a FunctionAgent wired with the
-shared web tools and the shared SYSTEM_PROMPT. Instead of writing one
-QuestionSolver subclass per question, instantiate WebSolver with the question
-number:
-
-    from gaia.web_solver import WebSolver
-    from gaia.base import openrouter_llm
-
-    print(WebSolver(16).resolve(llm=openrouter_llm()))
 """
 from __future__ import annotations
 
