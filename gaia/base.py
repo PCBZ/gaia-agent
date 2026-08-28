@@ -139,6 +139,12 @@ def advanced_open_router_llm() -> LLM:
     return openrouter_llm(CONFIG["llm"]["openrouter"]["advanced_model"])
 
 
+def premium_open_router_llm() -> LLM:
+    """The strongest (most expensive) OpenRouter model (gpt-4o) for the few questions
+    even DeepSeek can't do — e.g. #8, whose page DeepSeek's search fails to locate."""
+    return openrouter_llm(CONFIG["llm"]["openrouter"]["premium_model"])
+
+
 class QuestionSolver(ABC):
     """Solves one GAIA question."""
 

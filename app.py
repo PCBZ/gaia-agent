@@ -75,6 +75,15 @@ def solve_one(number: int):
     return _run
 
 
+def run_all(progress=gr.Progress()):
+    """Run every question in order; returns one answer per row (for all answer boxes)."""
+    questions = load_questions()
+    answers = []
+    for i in progress.tqdm(range(len(questions)), desc="Solving all questions"):
+        answers.append(solve_one(i + 1)())
+    return answers
+
+
 IS_SPACE = bool(os.getenv("SPACE_ID"))
 
 
@@ -131,6 +140,8 @@ with gr.Blocks(title="GAIA Agent") as demo:
     else:
         username_box = gr.Textbox(label="Hugging Face username", value="Devil02047")
 
+    run_all_btn = gr.Button("▶️ Run all questions", variant="secondary")
+
     answer_boxes = []
     for i, q in enumerate(load_questions()):
         number = i + 1
@@ -146,6 +157,8 @@ with gr.Blocks(title="GAIA Agent") as demo:
             ans = gr.Textbox(label="answer", show_label=False, scale=2, container=False)
         answer_boxes.append(ans)
         run_btn.click(solve_one(number), outputs=ans)
+
+    run_all_btn.click(run_all, outputs=answer_boxes)
 
     submit_btn = gr.Button("Submit all answers", variant="primary")
     status = gr.Markdown()

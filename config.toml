@@ -22,7 +22,8 @@ model    = "openai/gpt-oss-120b"
 [llm.openrouter]
 api_base      = "https://openrouter.ai/api/v1"
 model         = "openai/gpt-4o-mini"                # default (cheap)
-advanced_model = "deepseek/deepseek-chat-v3-0324"   # stronger, for hard questions
+advanced_model = "deepseek/deepseek-chat-v3-0324"   # stronger, cheap (most hard questions)
+premium_model  = "openai/gpt-4o"                    # strongest, for the few DeepSeek can't do (#8)
 
 [audio]
 # Groq Whisper transcription (transcribe_audio).
