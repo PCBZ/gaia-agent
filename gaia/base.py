@@ -11,7 +11,7 @@ import asyncio
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from dotenv import load_dotenv
 
@@ -137,7 +137,9 @@ class QuestionSolver(ABC):
     """Solves one GAIA question."""
 
     number: int  # GAIA question number (1-based), used by the registry
-    llm: Optional[LLM] = None
+    # A factory called lazily at solve time to build this solver's LLM (so importing
+    # the registry never touches API keys). None -> use default_llm().
+    llm_factory: Optional[Callable[[], LLM]] = None
 
     @property
     def index(self) -> int:
@@ -150,17 +152,22 @@ class QuestionSolver(ABC):
 
         return load_questions()[self.index]
 
-    def with_llm(self, llm: LLM) -> "QuestionSolver":
-        """Set this solver's preferred LLM and return self (for inline use)."""
-        self.llm = llm
+    def with_llm(self, factory: Callable[[], LLM]) -> "QuestionSolver":
+        """Set a factory (called lazily at solve time) for this solver's LLM.
+
+        Pass a zero-arg callable, e.g. `.with_llm(lambda: openrouter_llm("openai/gpt-4o"))`,
+        so importing the registry never constructs an LLM or reads API keys.
+        """
+        self.llm_factory = factory
         return self
 
     def resolve(self, llm: Optional[LLM] = None) -> str:
-        """Public entry point. Uses the given llm, else this solver's llm, else default."""
+        """Public entry point. Uses the given llm, else this solver's factory, else default."""
         return asyncio.run(self._resolve(llm))
 
     async def _resolve(self, llm: Optional[LLM]) -> str:
-        return await self.solve(llm or self.llm or default_llm())
+        chosen = llm or (self.llm_factory() if self.llm_factory else default_llm())
+        return await self.solve(chosen)
 
     @abstractmethod
     async def solve(self, llm: LLM) -> str:

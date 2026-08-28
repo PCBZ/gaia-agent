@@ -23,7 +23,7 @@ SOLVERS = {
         ReasoningSolver(6),
         Q7(),
         # #8 wanders to distractor pages on weaker models; gpt-4o stays on source.
-        WebSolver(8).with_llm(openrouter_llm("openai/gpt-4o")),
+        WebSolver(8).with_llm(lambda: openrouter_llm("openai/gpt-4o")),
         ReasoningSolver(9),
         Q10(),
         WebSolver(11),
