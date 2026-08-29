@@ -6,6 +6,7 @@ from q6 import Q6
 from q7 import Q7
 from q10 import Q10
 from q14 import Q14
+from q18 import Q18
 from q19 import Q19
 
 from gaia.base import advanced_open_router_llm, reasoning_open_router_llm
@@ -51,7 +52,7 @@ SOLVERS = {
             hint="Write the city name in full — use 'Saint', never the abbreviation 'St.'.",
         ),
         WebSolver(17).with_llm(reasoning_open_router_llm),
-        WebSolver(18).with_llm(reasoning_open_router_llm),
+        Q18(),
         Q19(),
         WebSolver(20).with_llm(reasoning_open_router_llm),
     ]
