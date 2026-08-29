@@ -2,24 +2,22 @@
 from __future__ import annotations
 
 
+from q6 import Q6
 from q7 import Q7
 from q10 import Q10
 from q14 import Q14
 from q19 import Q19
 
-from gaia.base import (
-    advanced_open_router_llm,
-    premium_open_router_llm,
-    reasoning_open_router_llm,
-)
+from gaia.base import advanced_open_router_llm, reasoning_open_router_llm
 from gaia.web_solver import WebSolver
 from gaia.reasoning_solver import ReasoningSolver
 from gaia.coding_solver import CodingSolver
 
 # Instantiate each solver; key the registry by its GAIA question number.
-# Model tiers (cheapest first): default gpt-4o-mini -> advanced DeepSeek V3
-# (.with_llm(advanced_open_router_llm), for questions mini failed) -> premium gpt-4o
-# (.with_llm(premium_open_router_llm), for #8, which even DeepSeek can't locate).
+# Model tiers: default gpt-4o-mini for the easy/self-contained ones; DeepSeek V3
+# (advanced_open_router_llm) for #10's audio formatting; gpt-5-mini
+# (reasoning_open_router_llm) for the web-retrieval and reasoning questions, where it
+# is far more reliable than DeepSeek (which loops or gives up run-to-run).
 SOLVERS = {
     s.number: s
     for s in [
@@ -29,9 +27,9 @@ SOLVERS = {
         ).with_llm(reasoning_open_router_llm),
         ReasoningSolver(3),
         WebSolver(5).with_llm(reasoning_open_router_llm),
-        ReasoningSolver(6).with_llm(reasoning_open_router_llm),
+        Q6(),
         Q7(),
-        WebSolver(8).with_llm(premium_open_router_llm),
+        WebSolver(8).with_llm(reasoning_open_router_llm),
         ReasoningSolver(
             9,
             hint=(
