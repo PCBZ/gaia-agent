@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import os
+import time
 
 import httpx
 from ddgs import DDGS
@@ -19,16 +20,25 @@ from gaia.config import CONFIG
 
 def web_search(query: str, max_results: int = 10) -> str:
     """Search the web. Returns lines of 'title | url | snippet'."""
-    try:
-        results = list(DDGS().text(query, max_results=max_results, backend="auto"))
-    except Exception as exc:  # noqa: BLE001 - ddgs raises on rate limit / no hits
-        return f"Search failed ({exc}); try rephrasing the query."
-    if not results:
-        return "No results."
-    return "\n".join(
-        f"{r.get('title', '')} | {r.get('href', '')} | {r.get('body', '')}"
-        for r in results
-    )
+    # ddgs is flaky: transient rate limits raise, and a backend occasionally returns
+    # zero hits for a query that works on retry. Retry a few times before giving up so
+    # the agent doesn't abandon the question on a one-off empty result.
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            results = list(DDGS().text(query, max_results=max_results, backend="auto"))
+        except Exception as exc:  # noqa: BLE001 - ddgs raises on rate limit / no hits
+            last_exc = exc
+            results = []
+        if results:
+            return "\n".join(
+                f"{r.get('title', '')} | {r.get('href', '')} | {r.get('body', '')}"
+                for r in results
+            )
+        if attempt < 2:
+            time.sleep(1.5 * (attempt + 1))
+    reason = f"Search failed ({last_exc})" if last_exc else "No results"
+    return f"{reason}. Try different query terms, or use jina_search for obscure pages."
 
 
 def jina_search(query: str, max_chars: int = 8000) -> str:
